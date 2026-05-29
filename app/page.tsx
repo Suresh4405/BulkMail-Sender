@@ -641,7 +641,7 @@ if (!isLoggedIn) {
             </div>
             <div>
               <h1 className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                TemplateFlow
+                Bulkmail Sender
               </h1>
               <p className="text-xs text-gray-500 hidden sm:block">Email Campaign Manager</p>
             </div>

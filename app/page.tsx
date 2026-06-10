@@ -442,32 +442,34 @@ export default function Home() {
   const preview = getLivePreview();
 
   const sendEmails = async () => {
-    if (!file) {
-      setStatus('❌ Please upload contacts');
-      return;
-    }
+  if (!file) {
+    setStatus('❌ Please upload contacts');
+    return;
+  }
 
-    if (!to.trim()) {
-      setStatus('❌ Add recipient');
-      return;
-    }
+  if (!to.trim()) {
+    setStatus('❌ Add recipient');
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
+  setStatus('📧 Starting to send emails... This may take a few minutes for large lists');
 
-    const formData = new FormData();
-    formData.append('excel', file);
-    formData.append('to', to);
-    formData.append('cc', cc);
-    formData.append('bcc', bcc);
-    formData.append('subject', subject);
-    formData.append('body', body);
-    formData.append('senderEmail', senderEmail);
-    formData.append('senderPassword', senderPassword);
+  const formData = new FormData();
+  formData.append('excel', file);
+  formData.append('to', to);
+  formData.append('cc', cc);
+  formData.append('bcc', bcc);
+  formData.append('subject', subject);
+  formData.append('body', body);
+  formData.append('senderEmail', senderEmail);
+  formData.append('senderPassword', senderPassword);
 
-    attachments.forEach((attachment) => {
-      formData.append('attachments', attachment);
-    });
+  attachments.forEach((attachment) => {
+    formData.append('attachments', attachment);
+  });
 
+  try {
     const res = await fetch('/api/sendEmails', {
       method: 'POST',
       body: formData,
@@ -475,8 +477,18 @@ export default function Home() {
 
     const data = await res.json();
     setStatus(data.message);
+    
+    // Optional: Add a note about delays
+    if (data.message.includes('Sent') && allData.length > 20) {
+      setStatus(prev => prev + ' ⏱️ Note: Gmail has rate limits, so large campaigns take time');
+    }
+  } catch (error) {
+    setStatus('❌ Network error. Please try again.');
+    console.error(error);
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   // LOGIN SCREEN
 if (!isLoggedIn) {

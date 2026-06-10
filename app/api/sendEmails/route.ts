@@ -110,7 +110,6 @@ function markdownToHtml(text: string, columns: string[], rowData: any) {
 </html>`;
 }
 
-// ========== ADD THIS HELPER FUNCTION FOR RETRY LOGIC ==========
 async function sendWithRetry(transporter: any, emailOptions: any, maxRetries: number = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -123,7 +122,6 @@ async function sendWithRetry(transporter: any, emailOptions: any, maxRetries: nu
         return { success: false, error };
       }
       
-      // Wait longer between retries (5 seconds, then 10 seconds, then 15 seconds)
       const waitTime = 5000 * attempt;
       console.log(`Waiting ${waitTime/1000} seconds before retry...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -131,7 +129,6 @@ async function sendWithRetry(transporter: any, emailOptions: any, maxRetries: nu
   }
   return { success: false, error: null };
 }
-// ========== END OF ADDED FUNCTION ==========
 
 export async function POST(request: NextRequest) {
   try {
@@ -171,15 +168,13 @@ export async function POST(request: NextRequest) {
       return result;
     };
     
-    // ========== UPDATE TRANSPORTER WITH BETTER CONFIGURATION ==========
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user: senderEmail, pass: senderPassword },
-      pool: true, // Enable connection pooling
-      maxConnections: 3, // Maximum number of connections
-      maxMessages: 50, // Maximum messages per connection
+      pool: true, 
+      maxConnections: 3, 
+      maxMessages: 50, 
     });
-    // ========== END OF TRANSPORTER UPDATE ==========
     
     await transporter.verify();
     
@@ -187,23 +182,18 @@ export async function POST(request: NextRequest) {
     let failCount = 0;
     const failedEmails: any[] = [];
     
-    // ========== ADD THESE CONFIGURATION VALUES ==========
-    const DELAY_BETWEEN_EMAILS = 2000; // 2 seconds between each email
-    const BATCH_SIZE = 10; // Take a longer break every 10 emails
-    const DELAY_BETWEEN_BATCHES = 5000; // 5 seconds break after every 10 emails
-    // ========== END OF CONFIGURATION ==========
-    
-    // ========== MODIFIED LOOP WITH PROPER DELAYS ==========
+    const DELAY_BETWEEN_EMAILS = 2000; 
+    const BATCH_SIZE = 10; 
+    const DELAY_BETWEEN_BATCHES = 5000;
+ 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       
-      // Add delay between emails (skip delay for first email)
       if (i > 0) {
         console.log(`Waiting ${DELAY_BETWEEN_EMAILS/1000} seconds before next email...`);
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_EMAILS));
       }
       
-      // Take longer break after every batch
       if (i > 0 && i % BATCH_SIZE === 0) {
         console.log(`Taking a ${DELAY_BETWEEN_BATCHES/1000} second break after ${i} emails...`);
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
@@ -230,7 +220,6 @@ export async function POST(request: NextRequest) {
           content: Buffer.from(await attachment.arrayBuffer())
         })));
         
-        // ========== USE THE RETRY FUNCTION HERE ==========
         console.log(`Sending email ${i+1} of ${rows.length} to: ${to}`);
         const result = await sendWithRetry(transporter, {
           from: senderEmail,
@@ -241,8 +230,7 @@ export async function POST(request: NextRequest) {
           html: htmlBody,
           text: plainTextBody,
           attachments: emailAttachments,
-        }, 3); // Retry up to 3 times
-        // ========== END OF RETRY USAGE ==========
+        }, 3); 
         
         if (result.success) {
           successCount++;
@@ -259,9 +247,7 @@ export async function POST(request: NextRequest) {
         failedEmails.push({ row: i+1, reason: 'Unexpected error' });
       }
     }
-    // ========== END OF MODIFIED LOOP ==========
     
-    // Create detailed status message
     let statusMessage = `✅ Sent ${successCount} of ${rows.length} emails`;
     if (failCount > 0) {
       statusMessage += ` (${failCount} failed)`;
@@ -270,7 +256,6 @@ export async function POST(request: NextRequest) {
       statusMessage += ` with ${attachments.length} attachment(s)`;
     }
     
-    // Log failed emails for debugging (optional)
     if (failedEmails.length > 0) {
       console.log('Failed emails:', failedEmails);
     }

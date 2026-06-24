@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "BulkMail Sender - Email Automation",
   description: "Send personalized emails from Excel",
+  icons: {
+    icon: "/logo.png",        
+    apple: "/logo.png",       
+  },
 };
 
 export default function RootLayout({
